@@ -24,6 +24,6 @@ app.use(express.json());
 app.use(cors())
 app.use('/api', cartRoute)
 
-app.listen(process.env.PORT, ()=>{
+app.listen(process.env.PORT || 8080, ()=>{
     console.log('Server is listening to port 3000');
 })
