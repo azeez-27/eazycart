@@ -18,7 +18,10 @@ const storeSchema = new Schema({
         virtual_cart: [
           {
             product_id: String,
+            name: String,
             quantity: Number,
+            price: Number,
+            weight: Number,
           }
         ],
       }
