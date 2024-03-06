@@ -167,6 +167,23 @@ const resetDatabase = async (req, res) => {
   }
 }
 
+// API to Get all products in a specific store
+const getAllProducts = async (req, res) => {
+  const { storeId } = req.params;
+
+  try {
+    const store = await cartModel.findOne({ _id: storeId });
+    if (!store) {
+      return res.status(404).json({ error: 'Store not found' });
+    }
+
+    const products = store.products;
+    return res.json(products);
+  } catch (error) {
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 
 
 module.exports = {
@@ -176,4 +193,5 @@ module.exports = {
   resetVirtualCart,
   updateProducts,
   resetDatabase,
+  getAllProducts,
 };
