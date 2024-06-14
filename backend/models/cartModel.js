@@ -15,6 +15,7 @@ const storeSchema = new Schema({
     carts: [
       {
         cart_id: Number,
+        zombie_mode: Boolean,
         virtual_cart: [
           {
             product_id: String,

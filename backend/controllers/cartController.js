@@ -19,7 +19,7 @@ const fetchCartData = async (req, res) => {
     console.log("virtual cart sending");
     return res.json(cart.virtual_cart);
   } catch (error) {
-    return res.status(500).json({ error, error: "\nInternal server error"});
+    return res.status(500).json({ error, error: "\nInternal server error" });
   }
 };
 
@@ -94,8 +94,11 @@ const updateProducts = async (req, res) => {
     const newProductArray = req.body;
 
     // Validate product array
-    if (!Array.isArray(newProductArray) || !newProductArray.every(isValidProductData)) {
-      return res.status(400).json({ error: 'Invalid product array' });
+    if (
+      !Array.isArray(newProductArray) ||
+      !newProductArray.every(isValidProductData)
+    ) {
+      return res.status(400).json({ error: "Invalid product array" });
     }
 
     // Update the entire product array for the specified storeId
@@ -104,23 +107,28 @@ const updateProducts = async (req, res) => {
     if (result.success) {
       return res.json({ success: true });
     } else {
-      return res.status(500).json({ error: 'Failed to update product array', details: result.error });
+      return res
+        .status(500)
+        .json({
+          error: "Failed to update product array",
+          details: result.error,
+        });
     }
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: "Internal server error" });
   }
-}
+};
 
 // Function to validate product object
 function isValidProductData(product) {
   // Validate product attributes
   return (
     product &&
-    typeof product.productId === 'string' &&
-    typeof product.name === 'string' &&
-    typeof product.price === 'number' &&
-    typeof product.weight === 'number'
+    typeof product.productId === "string" &&
+    typeof product.name === "string" &&
+    typeof product.price === "number" &&
+    typeof product.weight === "number"
   );
 }
 
@@ -130,7 +138,7 @@ async function updateProductArray(storeId, newProductArray) {
     const store = await cartModel.findById(storeId);
 
     if (!store) {
-      return { success: false, error: 'Store not found' };
+      return { success: false, error: "Store not found" };
     }
 
     // Update the entire product array
@@ -142,30 +150,30 @@ async function updateProductArray(storeId, newProductArray) {
     if (updatedStore) {
       return { success: true };
     } else {
-      return { success: false, error: 'Failed to save updated store' };
+      return { success: false, error: "Failed to save updated store" };
     }
   } catch (error) {
     console.error(error);
-    return { success: false, error: 'Internal server error' };
+    return { success: false, error: "Internal server error" };
   }
 }
 
-// API to reset the whole database 
+// API to reset the whole database
 const resetDatabase = async (req, res) => {
   try {
     // Ensure the request body contains the entire database structure
     const newData = req.body;
-      
+
     // Replace the entire database with the provided data
     await cartModel.deleteMany({});
     await cartModel.insertMany(newData);
 
-    return res.json({ success: true, message: 'Database reset successfully' });
+    return res.json({ success: true, message: "Database reset successfully" });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: "Internal server error" });
   }
-}
+};
 
 // API to Get all products in a specific store
 const getAllProducts = async (req, res) => {
@@ -174,16 +182,64 @@ const getAllProducts = async (req, res) => {
   try {
     const store = await cartModel.findOne({ _id: storeId });
     if (!store) {
-      return res.status(404).json({ error: 'Store not found' });
+      return res.status(404).json({ error: "Store not found" });
     }
 
     const products = store.products;
     return res.json(products);
   } catch (error) {
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
+const fetchCartZombieMode = async (req, res) => {
+  const { storeId, cartId } = req.params;
+  console.log("Received store ID:", storeId);
+  console.log("Received cart ID:", cartId);
+
+  try {
+    const store = await cartModel.findOne({ _id: storeId });
+    if (!store) {
+      return res.status(404).json({ error: "Store not found" });
+    }
+
+    const cart = store.carts.find((c) => c.cart_id === parseInt(cartId));
+    if (!cart) {
+      return res.status(404).json({ error: "Cart not found" });
+    }
+    console.log("zombie mode status sending");
+    return res.json(cart.zombie_mode);
+  } catch (error) {
+    return res.status(500).json({ error, error: "\nInternal server error" });
+  }
+};
+
+// API to Update the cart's zombie mode for the specified cart in the database
+const updateCartZombieMode = async (req, res) => {
+  const { storeId, cartId, zombie_status } = req.body;
+
+  try {
+    const update = {
+      $set: {
+        "carts.$.zombie_mode": zombie_status,
+      },
+    };
+
+    // If zombie_status is false, set virtual_cart to an empty array
+    if (zombie_status === false) {
+      update.$set["carts.$.virtual_cart"] = [];
+    }
+
+    await cartModel.updateOne(
+      { _id: storeId, "carts.cart_id": cartId },
+      update
+    );
+
+    return res.json({ success: true });
+  } catch (error) {
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
 
 
 module.exports = {
@@ -194,4 +250,6 @@ module.exports = {
   updateProducts,
   resetDatabase,
   getAllProducts,
+  fetchCartZombieMode,
+  updateCartZombieMode,
 };
