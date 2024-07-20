@@ -2,7 +2,7 @@ runtime: nodejs20
 entrypoint: yarn start
 
 env_variables:
-  MONGODB_URI: "mongodb+srv://azeez:%40%40Azeez27@cluster0.xl7msos.mongodb.net/eazy-cart"
+  MONGODB_URI: # MongoDB URI
   # Add any other environment variables needed by your application
 
 # instance_class: F2
